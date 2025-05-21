@@ -1,7 +1,6 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
+# .github/workflows/deploy.yml
 
-name: Build and deploy Node.js app to Azure Web App - nestatasj
+name: Build and deploy NestJS app to Azure Web App - nestatasj
 
 on:
   push:
@@ -13,26 +12,41 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Set up Node.js version
+      - name: Use Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '22.x'
+          node-version: '18.x' # Usa una versión compatible con Azure App Service
 
-      - name: npm install, build, and test
+      - name: Install dependencies
+        run: npm install
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Build app
+        run: npm run build
+
+      - name: Copy necessary files to deployment folder
         run: |
-          npm install
-          npm run build --if-present
-          npm run test --if-present
+          mkdir deploy
+          cp -r dist deploy/
+          cp -r node_modules deploy/
+          cp -r prisma deploy/
+          cp package*.json deploy/
+          cp .env deploy/.env
 
-      - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
+      - name: Zip deployment folder
+        run: |
+          cd deploy
+          zip -r ../release.zip .
 
-      - name: Upload artifact for deployment job
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: node-app
@@ -45,30 +59,29 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
-      - name: Download artifact from build job
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: node-app
 
-      - name: Unzip artifact for deployment
+      - name: Unzip artifact
         run: unzip release.zip
-      
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_2E9707BAFCDC4909AAAF3A65E9067C5D }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_93903B6537C44AB88B5848C04B71F987 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_C318C757AC1947CFB1EFB21993B9E92E }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: 'Deploy to Azure Web App'
+      - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'nestatasj'
           slot-name: 'Production'
           package: .
-          
