@@ -1,6 +1,7 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, Req } from '@nestjs/common';
 import { TaskService } from './task.service';
-import { CreateTaskDto } from './dto';
+import { CreateTaskDto, UpdateTaskDto } from './dto';
+import { UserInRquest } from 'src/auth/models';
 
 @Controller('task')
 export class TaskController {
@@ -12,17 +13,17 @@ export class TaskController {
     }
 
     @Get()
-    findAll() {
-        return this.taskService.findAll();
+    findAll(@Query('userId') userId: number) {
+        return this.taskService.findAll(Number(userId));
     }
 
     @Get(':id')
-    findOne(@Param('id', ParseIntPipe) id: number) {
-        return this.taskService.findOne(id);
+    findOne(@Param('id', ParseIntPipe) id: number, @Req() req: UserInRquest) {
+        return this.taskService.findOne(id, req.userId);
     }
 
     @Put(':id')
-    update(@Param('id', ParseIntPipe) id: number, @Body() updateTaskDto: CreateTaskDto) {
+    update(@Param('id', ParseIntPipe) id: number, @Body() updateTaskDto: UpdateTaskDto) {
         return this.taskService.update(id, updateTaskDto);
     }
 

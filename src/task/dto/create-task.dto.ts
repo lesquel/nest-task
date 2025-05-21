@@ -6,6 +6,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { Priority, Status } from '../types';
+import { ConnectDto } from 'src/dto';
 
 export class CreateTaskDto {
   @IsString()
@@ -22,4 +23,6 @@ export class CreateTaskDto {
   @IsString()
   @IsNotEmpty()
   status: Status;
+  @IsNotEmpty()
+  connect : ConnectDto;
 }

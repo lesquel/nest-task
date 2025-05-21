@@ -6,18 +6,33 @@ const prisma = new PrismaClient();
 export class TaskService {
   async create(createTaskDto: CreateTaskDto) {
     return await prisma.task.create({
-      data: createTaskDto,
+      data: {
+        description: createTaskDto.description,
+        title: createTaskDto.title,
+        priority: createTaskDto.priority,
+        status: createTaskDto.status,
+        user: {
+          connect: {
+            id: createTaskDto.connect.id,
+          },
+        },
+      },
     });
   }
 
-  async findAll() {
-    return await prisma.task.findMany();
+  async findAll(userId: number) {
+    return await prisma.task.findMany({
+      where: {
+        userId: userId,
+      },
+    });
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, userId: number) {
     return await prisma.task.findUnique({
       where: {
         id: id,
+        userId: userId,
       },
     });
   }
@@ -30,7 +45,7 @@ export class TaskService {
       data: updateTaskDto,
     });
   }
-  
+
   async delete(id: number) {
     return await prisma.task.delete({
       where: {
