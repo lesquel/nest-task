@@ -92,3 +92,6 @@ jobs:
           app-name: 'nestprueba'
           slot-name: 'Production'
           package: .
+          clean: true
+          restart: true
+          enable-oryx-build: false
